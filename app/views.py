@@ -1,4 +1,5 @@
 import base64
+import json
 from datetime import date
 
 from flask import g, session, render_template, request, redirect, url_for
@@ -103,14 +104,7 @@ def feed():
                 f"WHERE username IN (SELECT followed FROM followers WHERE follower='{username}') "
                 f"OR username='{username}'")
     posts = cur.fetchall()
-    print(posts)
-    # for post in posts:
-    #     cur.execute(f"SELECT COUNT(*) FROM likes WHERE photo = '{post.id}'")
-    #     likes = cur.fetchone()
-    #     post.append(likes[0])
-    #     cur.execute("SELECT * FROM comment WHERE id_photo = '%s'" % post[0])
-    #     comments = cur.fetchall()
-    #     post.append(comments)
+
     return render_template('feed.html', username=session['username'], posts=posts)
 
 
@@ -158,7 +152,6 @@ def delete(pk):
     cur.execute(f"SELECT username FROM photos "
                 f"WHERE username='{username}'")
     post = cur.fetchone()
-    print(post)
 
     if session['username'] is not None and session['username'] != post[0]:
         cur.execute(f"DELETE FROM likes WHERE photo={pk}")
@@ -167,3 +160,15 @@ def delete(pk):
         cur.close()
 
     return redirect(url_for('feed'))
+
+
+@app.route('/post/<int:pk>', methods=['GET'])
+def detail(pk):
+    cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(f"SELECT * FROM photos WHERE id={pk}")
+    post = cur.fetchone()
+
+    cur.execute(f"SELECT * FROM comments WHERE photo={pk}")
+    comments = cur.fetchall()
+
+    return render_template("detail.html", post=post, comments=comments)
