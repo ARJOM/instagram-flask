@@ -12,6 +12,7 @@
         {% else %}
             <img src="data:image/png;base64,{{post.photo}}" width="300px" height="200px">
         {% endif %}
+        {{ post.likes }} likes
         {{ post.description }}
         {{ post.published_date }}
     {% endfor %}

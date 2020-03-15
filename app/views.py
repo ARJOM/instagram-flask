@@ -134,13 +134,20 @@ def upload_file():
 def like(pk):
     if session['username'] is not None:
         username = session['username'][0]
-        try:
-            cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(f"SELECT * FROM likes WHERE username='{username}' AND photo={pk}")
+        like = cur.fetchone()
+
+        if like is None:
             cur.execute(f"INSERT INTO likes(username, photo) VALUES ('{username}',{pk})")
             g.db.commit()
             cur.close()
-        except:
-            pass
+        else:
+            cur.execute(f"DELETE FROM likes WHERE username='{username}' AND photo={pk}")
+            g.db.commit()
+            cur.close()
+
     return redirect(url_for('feed'))
 
 
