@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+	<head>
+		<title>Instagram</title>
+        <meta charset="utf-8" />
+		<link href="../static/css/bootstrap.min.css" rel="stylesheet">
+	</head>
+	<body style="font-family: 'Billabong', serif">
+		<div>
+            <nav class="navbar navbar-light bg-light">
+                <a class="navbar-brand" href="/index">
+                    <img src="https://banner2.kisspng.com/20180324/zkq/kisspng-logo-computer-icons-instagram-5ab6f47c8a24a4.5628261715219395805658.jpg" width="30" height="30" class="d-inline-block align-top" alt="">
+                    | Instagram
+                </a>
+                {% if session['username'] != None %}
+                    <a href="/logout">Sair</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Entrar</a>
+                    <a href="{{ url_for('sign_up') }}">Criar Conta</a>
+                {% endif %}
+            </nav>
+        </div>
+        {% block content%}
+        {% endblock %}
+
+        <script src="../static/js/bootstrap.min.js"></script>
+    </body>
+</html>

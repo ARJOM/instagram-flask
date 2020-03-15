@@ -1,4 +1,6 @@
-from flask import g, session, render_template
+from flask import g, session, render_template, request, redirect, url_for
+
+import hashlib
 
 import psycopg2.extras
 
@@ -26,9 +28,53 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def sign_up():
-    pass
+    if request.method == 'POST':
+        # Getting form information
+        name = request.form['name']
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+
+        # Encrypting password
+        hash_object = hashlib.md5(password.encode())
+        password = hash_object.hexdigest()
+
+        try:
+            # Executing query
+            cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cur.execute(f"INSERT INTO users(name, username, email, password) "
+                    f"VALUES ('{name}','{username}','{email}','{password}')")
+            g.db.commit()
+            cur.close()
+
+            # Authenticating user
+            session['username'] = username
+            return redirect(url_for('feed'))
+        except:
+            return render_template('signup.html', error="ERRO AO CADASTRAR")
+
+    return render_template('signup.html')
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    pass
+    if request.method == 'POST':
+        # Getting form information
+        username = request.form['username']
+        password = request.form['password']
+
+        # Encrypting password
+        hash_object = hashlib.md5(password.encode())
+        password = hash_object.hexdigest()
+
+        # Executing query
+        cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(f"SELECT username FROM users WHERE username='{username}' AND password='{password}'")
+        user = cur.fetchone()
+
+        # Checking result
+        if user is not None:
+            session['username'] = user
+            return redirect(url_for('feed'))
+        return render_template('login.html', error='USUARIO NÂO EXISTE')
+    return render_template('login.html')
