@@ -11,7 +11,7 @@ CREATE TABLE photos (
 	published_date date NOT NULL,
 	description varchar(2200),
 	username varchar(80),
-	way text NOT NULL,
+	path varchar(255) NOT NULL,
 	CONSTRAINT photo_pk PRIMARY KEY (id),
 	CONSTRAINT user_fk FOREIGN KEY (username) REFERENCES users(username)
 );

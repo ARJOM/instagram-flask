@@ -1,3 +1,6 @@
+import base64
+from datetime import date
+
 from flask import g, session, render_template, request, redirect, url_for
 
 import hashlib
@@ -19,6 +22,9 @@ def teardown_request(exception):
 
 
 # ~~~~
+
+# Core
+# - - - - - - - - - - - - - - - - - - -
 
 @app.route('/')
 def index():
@@ -83,3 +89,81 @@ def login():
             return redirect(url_for('feed'))
         return render_template('login.html', error='USUARIO NÂO EXISTE')
     return render_template('login.html')
+
+
+# App
+# - - - - - - - - - - - - - - - - - - - -
+
+@app.route('/feed', methods=['GET'])
+def feed():
+    username = session['username'][0]
+
+    cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(f"SELECT * FROM photos "
+                f"WHERE username IN (SELECT followed FROM followers WHERE follower='{username}') "
+                f"OR username='{username}'")
+    posts = cur.fetchall()
+    print(posts)
+    # for post in posts:
+    #     cur.execute(f"SELECT COUNT(*) FROM likes WHERE photo = '{post.id}'")
+    #     likes = cur.fetchone()
+    #     post.append(likes[0])
+    #     cur.execute("SELECT * FROM comment WHERE id_photo = '%s'" % post[0])
+    #     comments = cur.fetchall()
+    #     post.append(comments)
+    return render_template('feed.html', username=session['username'], posts=posts)
+
+
+@app.route('/post/new', methods=['GET', 'POST'])
+def upload_file():
+    if session['username'] is None:
+        return redirect(url_for('feed'))
+
+    if request.method == 'POST':
+        now = date.today()
+        cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        file = request.files['file']
+        if file is None:
+            return redirect('feed')
+        photo = base64.b64encode(file.read()).decode('utf-8').replace('\n', '')
+        username = session['username'][0]
+        description = request.form['description']
+        cur.execute(f"INSERT INTO photos(published_date, description, username, photo)"
+                    f"VALUES ('{now}','{description}', '{username}', '{photo}')")
+        g.db.commit()
+        cur.close()
+        return redirect(url_for('feed'))
+    return render_template('form.html')
+
+
+@app.route('/like/<int:pk>')
+def like(pk):
+    if session['username'] is not None:
+        username = session['username'][0]
+        try:
+            cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cur.execute(f"INSERT INTO likes(username, photo) VALUES ('{username}',{pk})")
+            g.db.commit()
+            cur.close()
+        except:
+            pass
+    return redirect(url_for('feed'))
+
+
+@app.route('/delete/<int:pk>')
+def delete(pk):
+    username = session['username'][0]
+
+    cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(f"SELECT username FROM photos "
+                f"WHERE username='{username}'")
+    post = cur.fetchone()
+    print(post)
+
+    if session['username'] is not None and session['username'] != post[0]:
+        cur.execute(f"DELETE FROM likes WHERE photo={pk}")
+        cur.execute(f"DELETE FROM photos WHERE id={pk}")
+        g.db.commit()
+        cur.close()
+
+    return redirect(url_for('feed'))

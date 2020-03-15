@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <a href="{{ url_for('upload_file') }}">Novo Post</a>
+    <div style="display: grid; grid-gap: 50px; margin: 50px; margin-top: 50px; flex-direction: column;">
+    {% for post in posts %}
+        {{ post.published_date }}
+        {{ post.description }}
+        {% if session['username'] != None %}
+            <a href="{{ url_for('like', pk=post.id) }}">
+                <img src="data:image/png;base64,{{post.photo}}" width="300px" height="200px">
+            </a>
+        {% else %}
+            <img src="data:image/png;base64,{{post.photo}}" width="300px" height="200px">
+        {% endif %}
+        {{ post.username }}
+        {% if session['username'][0] == post.username %}
+            <a href="{{ url_for('delete', pk=post.id) }}">Remover post</a>
+        {% endif %}
+    {% endfor %}
+    </div>
+{% endblock %}
