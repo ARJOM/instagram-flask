@@ -11,7 +11,8 @@ CREATE TABLE photos (
 	published_date date NOT NULL,
 	description varchar(2200),
 	username varchar(80),
-	path varchar(255) NOT NULL,
+	photo varchar(255) NOT NULL,
+	likes integer,
 	CONSTRAINT photo_pk PRIMARY KEY (id),
 	CONSTRAINT user_fk FOREIGN KEY (username) REFERENCES users(username)
 );
@@ -41,3 +42,25 @@ CREATE TABLE likes (
 	CONSTRAINT user_fk FOREIGN KEY (username) REFERENCES users(username),
 	CONSTRAINT photo_fk FOREIGN KEY (photo) REFERENCES photos(id)
 );
+
+CREATE OR REPLACE FUNCTION UpdateLikes()
+RETURNS TRIGGER AS $$
+DECLARE
+value INTEGER;
+BEGIN
+	SELECT likes FROM photos INTO value;
+	IF NEW IS NOT NULL THEN
+		UPDATE photos SET likes=value+1;
+		RETURN NEW;
+	ELSE
+		IF OLD IS NOT NULL THEN
+			UPDATE photos SET likes=value-1;
+			RETURN OLD;
+		END IF;
+	END IF;
+END
+$$ LANGUAGE PLPGSQL;
+CREATE TRIGGER UpdateLikes
+BEFORE INSERT OR DELETE ON likes
+FOR EACH ROW
+EXECUTE PROCEDURE UpdateLikes();

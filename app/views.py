@@ -1,5 +1,5 @@
 import base64
-import json
+
 from datetime import date
 
 from flask import g, session, render_template, request, redirect, url_for
@@ -153,7 +153,7 @@ def delete(pk):
                 f"WHERE username='{username}'")
     post = cur.fetchone()
 
-    if session['username'] is not None and session['username'] != post[0]:
+    if session['username'] is not None and session['username'][0] == post[0]:
         cur.execute(f"DELETE FROM likes WHERE photo={pk}")
         cur.execute(f"DELETE FROM photos WHERE id={pk}")
         g.db.commit()
