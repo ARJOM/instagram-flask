@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, session, render_template
 
 import psycopg2.extras
 
@@ -19,5 +19,16 @@ def teardown_request(exception):
 # ~~~~
 
 @app.route('/')
-def hello_world():
-    return 'Hello World!'
+def index():
+    session['username'] = None
+    return render_template('home.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def sign_up():
+    pass
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    pass
