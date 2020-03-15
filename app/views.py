@@ -26,6 +26,11 @@ def index():
     return render_template('home.html')
 
 
+@app.route('/logout')
+def logout():
+    return redirect(url_for('index'))
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def sign_up():
     if request.method == 'POST':

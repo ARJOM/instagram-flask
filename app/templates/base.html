@@ -13,7 +13,7 @@
                     | Instagram
                 </a>
                 {% if session['username'] != None %}
-                    <a href="/logout">Sair</a>
+                    <a href="{{ url_for('logout') }}">Sair</a>
                 {% else %}
                     <a href="{{ url_for('login') }}">Entrar</a>
                     <a href="{{ url_for('sign_up') }}">Criar Conta</a>
