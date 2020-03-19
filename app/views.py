@@ -92,7 +92,7 @@ def login():
     return render_template('login.html')
 
 
-# App
+# Photos
 # - - - - - - - - - - - - - - - - - - - -
 
 @app.route('/feed', methods=['GET'])
@@ -100,7 +100,7 @@ def feed():
     username = session['username'][0]
 
     cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute(f"SELECT * FROM photos "
+    cur.execute(f"SELECT * FROM photoinfo "
                 f"WHERE username IN (SELECT followed FROM followers WHERE follower='{username}') "
                 f"OR username='{username}'")
     posts = cur.fetchall()
@@ -153,18 +153,19 @@ def like(pk):
 
 @app.route('/delete/<int:pk>')
 def delete(pk):
-    username = session['username'][0]
+    if session['username'] is not None:
+        username = session['username'][0]
 
-    cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute(f"SELECT username FROM photos "
-                f"WHERE username='{username}'")
-    post = cur.fetchone()
+        cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(f"SELECT username FROM photos "
+                    f"WHERE id={pk} AND username='{username}'")
+        post = cur.fetchone()
 
-    if session['username'] is not None and session['username'][0] == post[0]:
-        cur.execute(f"DELETE FROM likes WHERE photo={pk}")
-        cur.execute(f"DELETE FROM photos WHERE id={pk}")
-        g.db.commit()
-        cur.close()
+        if post is not None:
+            cur.execute(f"DELETE FROM likes WHERE photo={pk}")
+            cur.execute(f"DELETE FROM photos WHERE id={pk}")
+            g.db.commit()
+            cur.close()
 
     return redirect(url_for('feed'))
 
@@ -172,7 +173,7 @@ def delete(pk):
 @app.route('/post/<int:pk>', methods=['GET'])
 def detail(pk):
     cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute(f"SELECT * FROM photos WHERE id={pk}")
+    cur.execute(f"SELECT * FROM photoinfo WHERE id={pk}")
     post = cur.fetchone()
 
     cur.execute(f"SELECT * FROM comments WHERE photo={pk}")
