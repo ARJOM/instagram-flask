@@ -84,6 +84,7 @@ def login():
         cur.execute(f"SELECT username FROM users WHERE username='{username}' AND password='{password}'")
         user = cur.fetchone()
 
+        cur.close()
         # Checking result
         if user is not None:
             session['username'] = user
@@ -104,6 +105,7 @@ def feed():
                 f"WHERE username IN (SELECT followed FROM followers WHERE follower='{username}') "
                 f"OR username='{username}'")
     posts = cur.fetchall()
+    cur.close()
 
     return render_template('feed.html', username=session['username'], posts=posts)
 
@@ -142,11 +144,11 @@ def like(pk):
         if like is None:
             cur.execute(f"INSERT INTO likes(username, photo) VALUES ('{username}',{pk})")
             g.db.commit()
-            cur.close()
         else:
             cur.execute(f"DELETE FROM likes WHERE username='{username}' AND photo={pk}")
             g.db.commit()
-            cur.close()
+
+        cur.close()
 
     return redirect(url_for('feed'))
 
@@ -165,7 +167,8 @@ def delete(pk):
             cur.execute(f"DELETE FROM likes WHERE photo={pk}")
             cur.execute(f"DELETE FROM photos WHERE id={pk}")
             g.db.commit()
-            cur.close()
+
+        cur.close()
 
     return redirect(url_for('feed'))
 
@@ -179,4 +182,33 @@ def detail(pk):
     cur.execute(f"SELECT * FROM comments WHERE photo={pk}")
     comments = cur.fetchall()
 
+    cur.close()
+
     return render_template("detail.html", post=post, comments=comments)
+
+
+# Users
+# - - - - - - - - - - - - - - - - - - - -
+
+@app.route('/profile/<string:username>', methods=['GET'])
+def profile(username):
+    if username == "" and session['username'] is not None:
+        username = session['username']
+
+    cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(f"SELECT username, name FROM users WHERE username='{username}'")
+    user = cur.fetchone()
+    if user is not None:
+        cur.execute(f"SELECT count(*) as value FROM followers WHERE followed='{username}'")
+        followers = cur.fetchone()
+        cur.execute(f"SELECT count(*) as value FROM followers WHERE follower='{username}'")
+        following = cur.fetchone()
+
+        cur.execute(f"SELECT * FROM photoinfo WHERE username='{username}'")
+        posts = cur.fetchall()
+
+        cur.close()
+
+        return render_template("profile.html", user=user, followers=followers, following=following, posts=posts)
+    return render_template("profile.html", error="Usuário não cadastrado")
+

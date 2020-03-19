@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {{ error }}
+    {% if not error %}
+        <h2>{{ user.username }}</h2>
+        <h4>{{ user.name }}</h4>
+        <p>Followers: {{ followers.value }} - Following: {{ following.value }}</p>
+{#        {% if user.username != session['username'] %}#}
+{#            <form method="GET" action="/follow/{{user}}">#}
+{#                <button type="submit" name="follow" class="btn btn-default">Seguir</button>#}
+{#            </form>#}
+{#        {% endif %}#}
+        <div style="display: grid; grid-gap: 50px; margin: 50px; margin-top: 50px; flex-direction: column;">
+            {% for post in posts %}
+                {{ post.username }}
+                {% if session['username'] != None %}
+                    <a href="{{ url_for('like', pk=post.id) }}">
+                        <img src="data:image/png;base64,{{post.photo}}" width="300px" height="200px">
+                    </a>
+                {% else %}
+                    <img src="data:image/png;base64,{{post.photo}}" width="300px" height="200px">
+                {% endif %}
+                {{ post.likes }} likes
+                <br/>
+                {{ post.description }}
+                <br/>
+                {{ post.published_date }}
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
