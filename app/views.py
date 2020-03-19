@@ -190,9 +190,20 @@ def detail(pk):
 # Users
 # - - - - - - - - - - - - - - - - - - - -
 
+def is_followed(followed):
+    cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(f"SELECT * FROM followers WHERE followed='{followed}' AND follower='{session['username'][0]}'")
+    f = cur.fetchone()
+    if f is None:
+        return False
+    return True
+
+
 @app.route('/profile/<string:username>', methods=['GET'])
 def profile(username):
-    if username == "" and session['username'] is not None:
+    if session['username'] is None:
+        return redirect(url_for('index'))
+    elif username == "":
         username = session['username']
 
     cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -207,8 +218,31 @@ def profile(username):
         cur.execute(f"SELECT * FROM photoinfo WHERE username='{username}'")
         posts = cur.fetchall()
 
+        f = is_followed(username)
+
         cur.close()
 
-        return render_template("profile.html", user=user, followers=followers, following=following, posts=posts)
+        return render_template("profile.html", user=user, followers=followers, following=following, posts=posts, follow=f)
     return render_template("profile.html", error="Usuário não cadastrado")
 
+
+@app.route('/follow/<string:username>', methods=['GET'])
+def follow(username):
+    follower = session['username'][0]
+    if not is_followed(username):
+        cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(f"INSERT INTO followers(follower, followed) VALUES ('{follower}','{username}')")
+        g.db.commit()
+        cur.close()
+    return redirect(url_for('profile', username=username))
+
+
+@app.route('/unfollow/<string:username>', methods=['GET'])
+def unfollow(username):
+    follower = session['username'][0]
+    if is_followed(username):
+        cur = g.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(f"DELETE FROM followers WHERE follower='{follower}' AND followed='{username}'")
+        g.db.commit()
+        cur.close()
+    return redirect(url_for('profile', username=username))

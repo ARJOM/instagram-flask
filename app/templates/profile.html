@@ -6,11 +6,17 @@
         <h2>{{ user.username }}</h2>
         <h4>{{ user.name }}</h4>
         <p>Followers: {{ followers.value }} - Following: {{ following.value }}</p>
-{#        {% if user.username != session['username'] %}#}
-{#            <form method="GET" action="/follow/{{user}}">#}
-{#                <button type="submit" name="follow" class="btn btn-default">Seguir</button>#}
-{#            </form>#}
-{#        {% endif %}#}
+        {% if user.username != session['username'][0] %}
+            {% if follow %}
+                <form method="GET" action="/unfollow/{{user.username}}">
+                    <button type="submit" name="follow" class="btn btn-default">Unfollow</button>
+                </form>
+            {% else %}
+                <form method="GET" action="/follow/{{user.username}}">
+                    <button type="submit" name="follow" class="btn btn-default">Follow</button>
+                </form>
+            {% endif %}
+        {% endif %}
         <div style="display: grid; grid-gap: 50px; margin: 50px; margin-top: 50px; flex-direction: column;">
             {% for post in posts %}
                 {{ post.username }}

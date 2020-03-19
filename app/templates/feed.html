@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{{ url_for('upload_file') }}">Novo Post</a>
+    <a href="{{ url_for('upload_file') }}">New Post</a>
     <div style="display: grid; grid-gap: 50px; margin: 50px; margin-top: 50px; flex-direction: column;">
     {% for post in posts %}
         {{ post.username }}
